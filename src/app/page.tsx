@@ -19,31 +19,24 @@ export default function Home() {
   };
 
   return (
-    <div className={`min-h-screen flex items-center justify-center ${theme === "dark" ? "bg-gradient-to-br from-gray-900 via-gray-800 to-black" : "bg-gradient-to-br from-gray-50 via-gray-100 to-white"} transition-all duration-700`}>
-      <div className="text-center p-6">
-        <h1 className="text-5xl md:text-6xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600 animate-pulse mb-6">
+    <div className={`min-h-screen flex items-center justify-center ${theme === "dark" ? "bg-gray-900" : "bg-gray-100"} transition-all duration-500`}>
+      <div className="text-center p-8">
+        <h1 className={`text-5xl font-semibold ${theme === "dark" ? "text-gray-100" : "text-gray-800"} mb-6`}>
           Real-Time AI Product Demos
         </h1>
-        <p className="text-xl md:text-2xl text-gray-300 dark:text-gray-400 mb-8 font-medium">
-          Experience the future of AI-driven innovations!
+        <p className={`text-lg ${theme === "dark" ? "text-gray-400" : "text-gray-600"} mb-8`}>
+          Experience professional AI-driven solutions.
         </p>
-        <div className="space-x-4 flex justify-center flex-wrap">
+        <div className="space-x-4 flex justify-center">
           <Link href="/demo-agent">
-            <button className="glass glass-hover px-6 py-3 text-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-500 transform hover:scale-105">
-              Demo Agent
-            </button>
+            <button className="btn btn-hover">Demo Agent</button>
           </Link>
           <Link href="/conversational-ai">
-            <button className="glass glass-hover px-6 py-3 text-lg font-semibold text-white bg-gradient-to-r from-green-600 to-teal-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-500 transform hover:scale-105">
-              Conversational AI
-            </button>
+            <button className="btn btn-hover">Conversational AI</button>
           </Link>
         </div>
-        <div className="mt-8">
-          <button
-            onClick={toggleTheme}
-            className="glass glass-hover px-4 py-2 text-md font-medium text-gray-800 dark:text-gray-200 mt-4 rounded-lg transition-all duration-500"
-          >
+        <div className="mt-6">
+          <button onClick={toggleTheme} className="btn btn-hover mt-4">
             Toggle {theme === "dark" ? "Light" : "Dark"} Mode
           </button>
         </div>

@@ -4,12 +4,15 @@ import { useState, useEffect, useRef } from "react";
 
 export default function ConversationalAI() {
   const [messages, setMessages] = useState([
-    { text: "Hello! I'm your Voice AI Assistant. Speak or type to interact!", sender: "ai" },
+    { text: "Hello! I'm your AI Assistant. Type or speak to interact.", sender: "ai", avatar: "🤖" },
   ]);
   const [input, setInput] = useState("");
   const [theme, setTheme] = useState("dark");
   const [isListening, setIsListening] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [voiceHistory, setVoiceHistory] = useState<string[]>([]);
   const recognitionRef = useRef<any>(null);
+  const [avatar, setAvatar] = useState("🤖");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -21,6 +24,7 @@ export default function ConversationalAI() {
         recognitionRef.current.onresult = (event: any) => {
           const transcript = event.results[event.results.length - 1][0].transcript;
           setInput(transcript);
+          setVoiceHistory((prev) => [transcript, ...prev.slice(0, 5)]);
           handleSend(new Event("submit") as any);
         };
         recognitionRef.current.onerror = (event: any) => {
@@ -35,14 +39,16 @@ export default function ConversationalAI() {
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
     if (input.trim()) {
-      setMessages([...messages, { text: input, sender: "user" }, { text: "Processing your request...", sender: "ai" }]);
+      setMessages([...messages, { text: input, sender: "user", avatar }]);
+      setIsTyping(true);
       setInput("");
       setTimeout(() => {
         setMessages((prev) => [
-          ...prev.slice(0, -1),
-          { text: `You said: ${input}. How can I assist further? (Try 'tell me a joke' or 'explain AI')`, sender: "ai" },
+          ...prev,
+          { text: `You said: ${input}. How can I assist? (Try 'help' or 'info')`, sender: "ai", avatar: "🤖" },
         ]);
-      }, 1000);
+        setIsTyping(false);
+      }, 1500);
     }
   };
 
@@ -52,7 +58,7 @@ export default function ConversationalAI() {
     } else {
       if (recognitionRef.current) {
         recognitionRef.current.start();
-        setMessages((prev) => [...prev, { text: "Listening...", sender: "ai" }]);
+        setMessages((prev) => [...prev, { text: "Listening...", sender: "ai", avatar: "🤖" }]);
       }
     }
     setIsListening(!isListening);
@@ -64,62 +70,93 @@ export default function ConversationalAI() {
     if (typeof window !== "undefined") localStorage.setItem("theme", newTheme);
   };
 
+  const quickCommands = ["Help", "Info", "Status"];
+  const avatars = ["🤖", "😊", "🌐"];
+
   return (
-    <div className={`min-h-screen flex flex-col ${theme === "dark" ? "bg-gradient-to-br from-gray-900 via-gray-800 to-black" : "bg-gradient-to-br from-gray-50 via-gray-100 to-white"} transition-all duration-700`}>
-      <nav className="p-6 border-b shadow-2xl">
-        <h1 className="text-4xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600 animate-pulse">
-          Voice AI Assistant
+    <div className={`min-h-screen flex flex-col ${theme === "dark" ? "bg-gray-900" : "bg-gray-100"} transition-all duration-500`}>
+      <nav className="p-4 border-b shadow-md">
+        <h1 className={`text-3xl font-semibold ${theme === "dark" ? "text-gray-100" : "text-gray-800"} text-center`}>
+          AI Assistant
         </h1>
-        <div className="flex justify-center space-x-6 mt-4">
-          <button
-            onClick={toggleTheme}
-            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:from-blue-700 hover:to-purple-800 transition-all duration-500 transform hover:scale-105"
-          >
+        <div className="flex justify-center space-x-4 mt-3">
+          <button onClick={toggleTheme} className="btn btn-hover">
             Toggle {theme === "dark" ? "Light" : "Dark"} Mode
           </button>
           <button
             onClick={toggleVoice}
-            className={`px-6 py-3 rounded-xl shadow-lg transition-all duration-500 transform hover:scale-105 ${
-              isListening
-                ? "bg-red-600 hover:bg-red-700"
-                : "bg-green-600 hover:bg-green-700"
-            } text-white font-semibold`}
+            className={`btn ${isListening ? "btn-hover bg-red-500 hover:bg-red-600" : "btn-hover bg-green-500 hover:bg-green-600"}`}
           >
             {isListening ? "Stop Listening" : "Start Voice"}
           </button>
+          <select
+            value={avatar}
+            onChange={(e) => setAvatar(e.target.value)}
+            className="btn btn-hover text-gray-800 dark:text-gray-200"
+          >
+            {avatars.map((av) => (
+              <option key={av} value={av}>
+                {av}
+              </option>
+            ))}
+          </select>
         </div>
       </nav>
-      <div className="flex-1 p-8 overflow-y-auto">
+      <div className="flex-1 p-6 overflow-y-auto">
         {messages.map((msg, index) => (
           <div
             key={index}
-            className={`my-3 p-5 rounded-2xl max-w-[75%] shadow-xl ${
+            className={`my-2 p-3 rounded-lg max-w-[70%] ${
               msg.sender === "user"
                 ? `${theme === "dark" ? "bg-blue-900" : "bg-blue-200"} text-white ml-auto`
-                : `${theme === "dark" ? "bg-gray-800" : "bg-gray-300"} text-black`
-            } transform transition-all duration-500 hover:shadow-2xl hover:scale-102`}
+                : `${theme === "dark" ? "bg-gray-700" : "bg-gray-300"} text-black`
+            } shadow-md`}
           >
-            <p className="font-medium">{msg.text}</p>
+            <span className="inline-block mr-2 text-lg">{msg.avatar}</span>
+            <p className="font-medium inline">{msg.text}</p>
           </div>
         ))}
+        {isTyping && (
+          <div className={`my-2 p-3 rounded-lg max-w-[70%] ${theme === "dark" ? "bg-gray-700" : "bg-gray-600"} text-white`}>
+            Typing...
+          </div>
+        )}
+        {voiceHistory.length > 0 && (
+          <div className={`mt-4 text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+            Recent Voice: {voiceHistory.join(", ")}
+          </div>
+        )}
       </div>
-      <form onSubmit={handleSend} className="p-6 border-t-2 border-gray-300 flex">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Type or speak your message..."
-          className={`flex-1 p-4 rounded-l-2xl ${
-            theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
-          } border-2 border-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-500 transition-all duration-500`}
-        />
-        <button
-          type="submit"
-          className="px-8 py-4 bg-gradient-to-r from-green-600 to-teal-700 text-white font-semibold rounded-r-2xl shadow-lg hover:from-green-700 hover:to-teal-800 transition-all duration-500 transform hover:scale-105"
-        >
-          Send
-        </button>
-      </form>
+      <div className="p-4 border-t flex flex-col">
+        <div className="flex justify-around mb-3">
+          {quickCommands.map((cmd) => (
+            <button
+              key={cmd}
+              onClick={() => {
+                setInput(cmd);
+                handleSend(new Event("submit") as any);
+              }}
+              className="btn btn-hover"
+            >
+              {cmd}
+            </button>
+          ))}
+        </div>
+        <form onSubmit={handleSend} className="flex">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Type or speak your message..."
+            className={`flex-1 p-2 rounded-l-lg ${
+              theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
+            } border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+          />
+          <button type="submit" className="btn btn-hover">
+            Send
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
