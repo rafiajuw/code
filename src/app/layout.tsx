@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import '../styles/global.css';
 import Navbar from '../app/components/Navbar';
+import Footer from './components/Footer';
 
 export const metadata: Metadata = {
   title: 'Real-Time AI Product Demos',
@@ -13,6 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen bg-gray-100">
         <Navbar />
         {children}
+        < Footer/>
       </body>
     </html>
   );
