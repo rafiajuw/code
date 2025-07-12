@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import '../global.css';
-import Navbar from '../components/Navbar.tsx';
+import '../styles/global.css';
+import Navbar from '../app/components/Navbar';
 
 export const metadata: Metadata = {
   title: 'Real-Time AI Product Demos',
