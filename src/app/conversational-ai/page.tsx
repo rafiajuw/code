@@ -1,10 +1,18 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import {
+  FaMicrophone,
+  FaMicrophoneSlash,
+  FaSun,
+  FaMoon,
+  FaRobot,
+  FaUser,
+} from "react-icons/fa";
 
 export default function ConversationalAI() {
   const [messages, setMessages] = useState([
-    { text: "Hello! I'm your AI Assistant. Type or speak to interact.", sender: "ai", avatar: "🤖" },
+    { text: "Hello! I'm your AI Assistant. Type or speak to interact.", sender: "ai" },
   ]);
   const [input, setInput] = useState("");
   const [theme, setTheme] = useState("dark");
@@ -12,54 +20,53 @@ export default function ConversationalAI() {
   const [isTyping, setIsTyping] = useState(false);
   const [voiceHistory, setVoiceHistory] = useState<string[]>([]);
   const recognitionRef = useRef<any>(null);
-  const [avatar, setAvatar] = useState("🤖");
+  const endOfMessagesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-      if (SpeechRecognition) {
-        recognitionRef.current = new SpeechRecognition();
-        recognitionRef.current.continuous = true;
-        recognitionRef.current.interimResults = false;
-        recognitionRef.current.onresult = (event: any) => {
-          const transcript = event.results[event.results.length - 1][0].transcript;
-          setInput(transcript);
-          setVoiceHistory((prev) => [transcript, ...prev.slice(0, 5)]);
-          handleSend(new Event("submit") as any);
-        };
-        recognitionRef.current.onerror = (event: any) => {
-          console.error("Speech recognition error:", event.error);
-          setIsListening(false);
-        };
-      }
-      setTheme(localStorage.getItem("theme") || "dark");
+    const SpeechRecognition =
+      (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.onresult = (event: any) => {
+        const transcript = event.results[event.results.length - 1][0].transcript;
+        setInput(transcript);
+        setVoiceHistory((prev) => [transcript, ...prev.slice(0, 5)]);
+        handleSend(new Event("submit") as any);
+      };
+      recognitionRef.current.onerror = () => setIsListening(false);
     }
+    setTheme(localStorage.getItem("theme") || "dark");
   }, []);
+
+  useEffect(() => {
+    endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
     if (input.trim()) {
-      setMessages([...messages, { text: input, sender: "user", avatar }]);
+      const userMsg = input;
+      setMessages([...messages, { text: userMsg, sender: "user" }]);
       setIsTyping(true);
       setInput("");
       setTimeout(() => {
         setMessages((prev) => [
           ...prev,
-          { text: `You said: ${input}. How can I assist? (Try 'help' or 'info')`, sender: "ai", avatar: "🤖" },
+          { text: `You said: ${userMsg}. How can I assist?`, sender: "ai" },
         ]);
         setIsTyping(false);
-      }, 1500);
+      }, 1200);
     }
   };
 
   const toggleVoice = () => {
     if (isListening) {
-      if (recognitionRef.current) recognitionRef.current.stop();
+      recognitionRef.current?.stop();
     } else {
-      if (recognitionRef.current) {
-        recognitionRef.current.start();
-        setMessages((prev) => [...prev, { text: "Listening...", sender: "ai", avatar: "🤖" }]);
-      }
+      recognitionRef.current?.start();
+      setMessages((prev) => [...prev, { text: "Listening...", sender: "ai" }]);
     }
     setIsListening(!isListening);
   };
@@ -67,96 +74,96 @@ export default function ConversationalAI() {
   const toggleTheme = () => {
     const newTheme = theme === "dark" ? "light" : "dark";
     setTheme(newTheme);
-    if (typeof window !== "undefined") localStorage.setItem("theme", newTheme);
+    localStorage.setItem("theme", newTheme);
   };
 
   const quickCommands = ["Help", "Info", "Status"];
-  const avatars = ["🤖", "😊", "🌐"];
 
   return (
-    <div className={`min-h-screen flex flex-col ${theme === "dark" ? "bg-gray-900" : "bg-gray-100"} transition-all duration-500`}>
-      <nav className="p-4 border-b shadow-md">
-        <h1 className={`text-3xl font-semibold ${theme === "dark" ? "text-gray-100" : "text-gray-800"} text-center`}>
-          AI Assistant
-        </h1>
-        <div className="flex justify-center space-x-4 mt-3">
-          <button onClick={toggleTheme} className="btn btn-hover">
-            Toggle {theme === "dark" ? "Light" : "Dark"} Mode
-          </button>
-          <button
-            onClick={toggleVoice}
-            className={`btn ${isListening ? "btn-hover bg-red-500 hover:bg-red-600" : "btn-hover bg-green-500 hover:bg-green-600"}`}
-          >
-            {isListening ? "Stop Listening" : "Start Voice"}
-          </button>
-          <select
-            value={avatar}
-            onChange={(e) => setAvatar(e.target.value)}
-            className="btn btn-hover text-gray-800 dark:text-gray-200"
-          >
-            {avatars.map((av) => (
-              <option key={av} value={av}>
-                {av}
-              </option>
+    <div className={`flex h-screen font-sans ${theme === "dark" ? "bg-[#0f1117] text-white" : "bg-gray-100 text-gray-900"}`}>
+      {/* Sidebar */}
+      <aside className="w-64 p-6 bg-gradient-to-b from-gray-900 to-gray-800 text-white flex flex-col justify-between shadow-xl">
+        <div>
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2"><FaRobot /> AI Assistant</h2>
+          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400">Quick Commands</h4>
+          <div className="space-y-2">
+            {quickCommands.map((cmd) => (
+              <button
+                key={cmd}
+                onClick={() => {
+                  setInput(cmd);
+                  handleSend(new Event("submit") as any);
+                }}
+                className="w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-left text-sm shadow-sm"
+              >
+                {cmd}
+              </button>
             ))}
-          </select>
+          </div>
         </div>
-      </nav>
-      <div className="flex-1 p-6 overflow-y-auto">
-        {messages.map((msg, index) => (
-          <div
-            key={index}
-            className={`my-2 p-3 rounded-lg max-w-[70%] ${
-              msg.sender === "user"
-                ? `${theme === "dark" ? "bg-blue-900" : "bg-blue-200"} text-white ml-auto`
-                : `${theme === "dark" ? "bg-gray-700" : "bg-gray-300"} text-black`
-            } shadow-md`}
-          >
-            <span className="inline-block mr-2 text-lg">{msg.avatar}</span>
-            <p className="font-medium inline">{msg.text}</p>
-          </div>
-        ))}
-        {isTyping && (
-          <div className={`my-2 p-3 rounded-lg max-w-[70%] ${theme === "dark" ? "bg-gray-700" : "bg-gray-600"} text-white`}>
-            Typing...
-          </div>
-        )}
-        {voiceHistory.length > 0 && (
-          <div className={`mt-4 text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-            Recent Voice: {voiceHistory.join(", ")}
-          </div>
-        )}
-      </div>
-      <div className="p-4 border-t flex flex-col">
-        <div className="flex justify-around mb-3">
-          {quickCommands.map((cmd) => (
+      </aside>
+
+      {/* Main Chat */}
+      <main className="flex-1 flex flex-col">
+        <header className="flex justify-between items-center px-6 py-4 border-b border-gray-700 bg-opacity-50 backdrop-blur-md">
+          <div className="flex gap-4 items-center">
             <button
-              key={cmd}
-              onClick={() => {
-                setInput(cmd);
-                handleSend(new Event("submit") as any);
-              }}
-              className="btn btn-hover"
+              onClick={toggleTheme}
+              className="text-2xl hover:text-yellow-400 transition-colors"
             >
-              {cmd}
+              {theme === "dark" ? <FaSun /> : <FaMoon />}
             </button>
+            <button
+              onClick={toggleVoice}
+              className="text-2xl hover:text-red-400 transition-colors"
+            >
+              {isListening ? <FaMicrophoneSlash /> : <FaMicrophone />}
+            </button>
+          </div>
+        </header>
+
+        <section className="flex-1 overflow-y-auto px-8 py-6 space-y-4 bg-transparent">
+          {messages.map((msg, i) => (
+            <div
+              key={i}
+              className={`max-w-[75%] px-5 py-3 rounded-2xl text-sm shadow-lg flex items-start gap-3 transition-all duration-300 ease-in-out animate-fadeIn ${
+                msg.sender === "user"
+                  ? "ml-auto bg-blue-600 text-white rounded-br-none"
+                  : "bg-gray-700 text-white rounded-bl-none"
+              }`}
+            >
+              <div className="pt-1">
+                {msg.sender === "user" ? <FaUser /> : <FaRobot />}
+              </div>
+              <div>{msg.text}</div>
+            </div>
           ))}
-        </div>
-        <form onSubmit={handleSend} className="flex">
+          {isTyping && (
+            <div className="flex gap-2 items-center text-sm text-gray-400 animate-pulse">
+              <FaRobot /> <span>AI is typing...</span>
+            </div>
+          )}
+          <div ref={endOfMessagesRef} />
+        </section>
+
+        <form
+          onSubmit={handleSend}
+          className="flex px-6 py-4 border-t bg-[#181a1f]"
+        >
           <input
-            type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type or speak your message..."
-            className={`flex-1 p-2 rounded-l-lg ${
-              theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
-            } border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            placeholder="Type your message here..."
+            className="flex-1 px-5 py-3 rounded-l-full text-sm bg-white text-gray-900 focus:outline-none"
           />
-          <button type="submit" className="btn btn-hover">
+          <button
+            type="submit"
+            className="px-6 py-3 text-sm bg-blue-600 text-white rounded-r-full hover:bg-blue-700 transition"
+          >
             Send
           </button>
         </form>
-      </div>
+      </main>
     </div>
   );
 }
